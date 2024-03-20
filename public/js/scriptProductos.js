@@ -50,6 +50,7 @@ enviarDatos.addEventListener("submit", (e)=>{
         mensajeDiv.innerHTML=mensaje;
         setTimeout(()=>{
             mensajeDiv.innerHTML="";
+            location.reload();
         },3000);
 
          //REINICIAR EL FORMULARIO
