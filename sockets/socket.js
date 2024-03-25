@@ -19,12 +19,18 @@ function socket(io) {
 
         socket.on("clienteGuardarUsuario", async(usuario)=>{
             // await new Usuario(usuario).save();
-            console.log("Guardar usuario");
-            console.log(usuario);
+            // console.log("Guardar usuario");
+            // console.log(usuario);
             try{
-                await new Usuario(usuario).save();
-                io.emit("servidorUsuarioGuardado", "usuario Guardado")
-                console.log("Usuario Guardado"); 
+                if(usuario.id==""){
+                    await new Usuario(usuario).save();
+                    io.emit("servidorUsuarioGuardado", "Usuario Guardado")
+                    console.log("Usuario Guardado"); 
+                }else{
+                    await Usuario.findByIdAndUpdate(usuario.id,usuario);
+                    io.emit("servidorUsuarioGuardado","Usuario Modificado")
+                } mostrarUsuarios();  
+
             }catch(e){
                 console.log("Error al registra usuario"+e);
             }
@@ -36,22 +42,78 @@ function socket(io) {
             io.emit("servidorEnviarProductos", productos)
         }
 
-        // GUARDAR USUARIO
+        // GUARDAR PRODUCTO
 
         socket.on("clienteGuardarProducto", async(producto)=>{
             // await new Usuario(usuario).save();
             console.log("Guardar producto");
             console.log(producto);
             try{
-                await new Producto(producto).save();
-                io.emit("servidorProductoGuardado", "producto Guardado")
+                if(producto.id==""){
+                    await new Producto(producto).save();
+                io.emit("servidorProductoGuardado", "Producto Guardado") //modificar
                 console.log("Pro Guardado"); 
-               
-                
+                }else{
+                    await Producto.findByIdAndUpdate(producto.id,producto);
+                    io.emit("servidorProductoGuardado", "Producto Modificado")
+                }mostrarProductos();  
             }catch(e){
                 console.log("Error al registra el producto"+e);
             }
         });
+
+        // OBTENER USUARIO POR ID
+        socket.on("clienteObtenerUsuarioPorID",async(id)=>{
+            const usuario = await Usuario.findById(id);
+            io.emit("servidorObtenerUsuarioPorID",usuario);
+
+        });
+
+        // OBTENER PRODUCTOS POR ID
+        socket.on("clienteObtenerProductoPorID",async(id)=>{
+            const producto = await Producto.findById(id);
+            io.emit("servidorObtenerProductoPorID",producto);
+
+        });
+
+        //BORRAR USUARIO POR ID
+        // socket.on("clienteBorrarUsuario", async(id)=>{
+        //         await Usuario.findByIdAndDelete(id);
+        //         io.emit("servidorUsuarioGuardado", "Usuario borrado");
+        //         mostrarUsuarios();
+        // });
+
+        socket.on("clienteBorrarUsuario", (id) => {
+            // Emitir un evento al cliente pidiendo confirmación
+            socket.emit("confirmarBorradoUsu", id);
+        });
+        
+        socket.on("confirmarBorradoUsu", async (id) => {
+            // Si el cliente confirmó, proceder con el borrado
+            await Usuario.findByIdAndDelete(id);
+            io.emit("servidorUsuarioGuardado", "Usuario borrado");
+            mostrarUsuarios();
+        });
+
+         //BORRAR PRODUCTO POR ID
+        //  socket.on("clienteBorrarProducto", async(id)=>{
+        //     await Producto.findByIdAndDelete(id);
+        //     io.emit("servidorProductoGuardado", "producto borrado");
+        //     mostrarProductos();
+        // });
+
+        socket.on("clienteBorrarProducto", (id) => {
+            // Emitir un evento al cliente pidiendo confirmación
+            socket.emit("confirmarBorrado", id);
+        });
+        
+        socket.on("confirmacionBorrado", async (id) => {
+            // Si el cliente confirmó, proceder con el borrado
+            await Producto.findByIdAndDelete(id);
+            io.emit("servidorProductoGuardado", "producto borrado");
+            mostrarProductos();
+        });
+        
 
     });// FIN IO.ON
 }

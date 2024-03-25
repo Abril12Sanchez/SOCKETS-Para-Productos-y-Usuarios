@@ -12,12 +12,12 @@ socket.on("servidorEnviarProductos",(productos)=>{
         <tr>
         <td>${(idLocal+1)*100}</td>
         <td>${producto.producto}</td>
-        <td>${producto.precio}</td>
+        <td>$${producto.precio}</td>
         <td>${producto.descripcion}</td>
         <td>${producto.cantidad}</td>
         <td>
             <a href="#" onClick="editarProducto('${producto._id}')"> Editar<a/>
-            <a href="#" onClick="borrarProducto('${producto._id}')"> Borrar<a/>
+           | <a href="#" onClick="borrarProducto('${producto._id}')"> Borrar<a/>
         </td>
         </tr>
         `;
@@ -35,6 +35,7 @@ enviarDatos.addEventListener("submit", (e)=>{
     e.preventDefault();
     //recivir datos
     var producto={
+        id:document.getElementById("id").value,
         producto:document.getElementById("producto").value,
         precio:document.getElementById("precio").value,
         descripcion:document.getElementById("descripcion").value,
@@ -70,20 +71,32 @@ enviarDatos.addEventListener("submit", (e)=>{
 function editarProducto(id){
     console.log(id);
     // window.location.href = 'editarProducto.html?id=' + id;
+    socket.emit("clienteObtenerProductoPorID", id)
     
 }
+
+socket.on("servidorObtenerProductoPorID",(producto)=>{
+    console.log(id);
+    document.getElementById("id").value=producto._id;
+    document.getElementById("producto").value=producto.producto;
+    document.getElementById("precio").value=producto.precio;
+    document.getElementById("descripcion").value=producto.descripcion;
+    document.getElementById("cantidad").value=producto.cantidad;
+    document.getElementById("txtNuevoProducto").innerHTML="Editar Producto 🌮🥫";
+    document.getElementById("txtGuardarProducto").innerHTML="Guardar Cambios a producto";
+
+});
 
 //ELIMINAR REGISTRO
 function borrarProducto(id){
     console.log(id);
-
-    // socket.emit("clienteBorrarProducto", id);
-    // socket.on("servidorProductoBorrado", (mensaje) => {
-    //   mensajeHtmlDel.innerHTML = mensaje;
-    //   setTimeout(() => {
-    //     mensajeHtml.innerHTML = "";
-    //     location.reload();
-    //   }, 1000);
-    // });
-
+    socket.emit("clienteBorrarProducto",id);
 }
+
+socket.on("confirmarBorrado", (id) => {
+    var confirmar = confirm("¿Seguro que quieres borrar este producto?");
+    if (confirmar) {
+        // Si el usuario confirmó, emitir un evento al servidor para proceder con el borrado
+        socket.emit("confirmacionBorrado", id);
+    }
+});
